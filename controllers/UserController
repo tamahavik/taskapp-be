@@ -6,7 +6,7 @@ exports.createUser = async (req, res) => {
 
     res.status(200).json({
       status: 'OK',
-      data: { user: newUser },
+      result: newUser,
     });
   } catch (err) {
     res.status(400).json({
@@ -22,6 +22,41 @@ exports.deleteUser = (req, res) => {};
 
 exports.updateUser = (req, res) => {};
 
-exports.getUser = (req, res) => {};
+exports.getUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
 
-exports.getAllUsers = (req, res) => {};
+    if (user) {
+      res.status(200).json({
+        status: 'OK',
+        result: user,
+      });
+    } else {
+      res.status(404).json({
+        status: 'Not Found',
+        message: 'User not found',
+      });
+    }
+  } catch (err) {
+    res.status(400).json({
+      result: 'bad request',
+      message: err,
+    });
+  }
+};
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find();
+
+    res.status(200).json({
+      status: 'OK',
+      result: users,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'Bad Request',
+      message: err,
+    });
+  }
+};
