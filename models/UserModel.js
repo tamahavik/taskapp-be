@@ -14,6 +14,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'password cannot be empty'],
   },
+  createAt: {
+    type: Date,
+    default: Date.now(),
+    select: false,
+  },
 });
 
 const User = mongoose.model('User', userSchema);
