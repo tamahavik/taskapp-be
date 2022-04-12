@@ -1,5 +1,6 @@
 const User = require('../models/UserModel');
 const APIFeature = require('./../utils/APIFeature');
+const Bcrypt = require('./../utils/Bcrypt');
 
 exports.alliasTopUser = async (req, res, next) => {
   req.query.limit = '5';
@@ -10,6 +11,9 @@ exports.alliasTopUser = async (req, res, next) => {
 
 exports.createUser = async (req, res) => {
   try {
+    let password = req.body.password;
+    const hash = await Bcrypt.cryptPassword(password);
+    req.body.password = hash;
     const newUser = await User.create(req.body);
 
     res.status(200).json({
