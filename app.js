@@ -2,6 +2,7 @@ const express = require('express');
 const morgan = require('morgan');
 
 const UserRouter = require('./routes/UserRoutes');
+const AuthRouter = require('./routes/AuthRoutes');
 
 const app = express();
 
@@ -12,5 +13,6 @@ if (process.env.NODE_ENV !== 'production') {
 app.use(express.json());
 
 app.use('/api/v1/users', UserRouter);
+app.use('/api/v1/auth', AuthRouter);
 
 module.exports = app;

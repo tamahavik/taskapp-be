@@ -6,8 +6,8 @@ exports.cryptPassword = (password) => {
   return bcrypt.hash(password, saltRounds);
 };
 
-exports.comparePassword = (password, hash, callbacks) => {
-  bcrypt.comparePassword(password, hash, (err, isMatch) => {
-    return err == null ? callbacks(null, isMatch) : callbacks(err);
+exports.comparePassword = (password, hash) => {
+  return bcrypt.comparePassword(password, hash, (err, result) => {
+    return result;
   });
 };
