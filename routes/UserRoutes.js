@@ -1,21 +1,21 @@
 const express = require('express');
-const UserController = require('./../controllers/UserController');
+const userController = require('./../controllers/UserController');
 
 const router = express.Router();
 
 router
   .route('/top-5-user')
-  .get(userController.alliasTopUser, UserController.getAllUsers);
+  .get(userController.alliasTopUser, userController.getAllUsers);
 
 router
   .route('/')
-  .get(UserController.getAllUsers)
-  .post(UserController.createUser);
+  .get(userController.getAllUsers)
+  .post(userController.createUser);
 
 router
   .route('/:id')
-  .get(UserController.getUser)
-  .patch(UserController.updateUser)
-  .delete(UserController.deleteUser);
+  .get(userController.getUser)
+  .patch(userController.updateUser)
+  .delete(userController.deleteUser);
 
 module.exports = router;

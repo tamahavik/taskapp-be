@@ -1,5 +1,5 @@
-const { findByIdAndUpdate } = require('../models/UserModel');
 const User = require('../models/UserModel');
+const APIFeature = require('./../utils/APIFeature');
 
 exports.alliasTopUser = async (req, res, next) => {
   req.query.limit = '5';
@@ -82,44 +82,12 @@ exports.getUser = async (req, res) => {
 
 exports.getAllUsers = async (req, res) => {
   try {
-    //filter users
-    const queryObject = { ...req.query };
-    const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    excludedFields.forEach((el) => delete queryObject[el]);
-
-    //less than greater than value
-    let queryStr = JSON.stringify(queryObject);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-
-    let userQuery = User.find(JSON.parse(queryStr));
-    //sorting
-    if (req.query.sort) {
-      const sortBy = req.userQuery.sort.split(',').join(' ');
-      userQuery = userQuery.sort(sortBy);
-    } else {
-      userQuery = userQuery.sort('-createdAt');
-    }
-
-    //fields
-    if (req.query.fields) {
-      const fields = req.query.fields.split(',').join(' ');
-      userQuery = userQuery.select(fields);
-    } else {
-      userQuery = userQuery.select('-__v');
-    }
-
-    //pagination
-    const page = req.query.page * 1 || 1;
-    const limit = req.query.limit * 1 || 100;
-    const skip = (page - 1) * limit;
-    //(skip==(page-1)*limit and limit==data per page)
-    userQuery = userQuery.skip(skip).limit(limit);
-    if (req.query.page) {
-      const numUser = await User.countDocuments();
-      if (skip >= numUser) throw new Error('This page does not exist');
-    }
-
-    const users = await userQuery;
+    const feature = new APIFeature(User.find(), req.query)
+      .filter()
+      .sort()
+      .limit()
+      .pagination();
+    const users = await feature.query;
 
     res.status(200).json({
       status: 'OK',
