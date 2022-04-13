@@ -7,7 +7,5 @@ exports.cryptPassword = (password) => {
 };
 
 exports.comparePassword = (password, hash) => {
-  return bcrypt.comparePassword(password, hash, (err, result) => {
-    return result;
-  });
+  return bcrypt.compare(password, hash);
 };
