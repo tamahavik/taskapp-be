@@ -27,7 +27,7 @@ exports.doLogin = CatchAsync(async (req, res, next) => {
   }
 });
 
-exports.doRegister = CatchAsync(async (req, res) => {
+exports.doRegister = CatchAsync(async (req, res, next) => {
   let password = req.body.password;
   const hash = await Bcrypt.cryptPassword(password);
   req.body.password = hash;
@@ -37,4 +37,37 @@ exports.doRegister = CatchAsync(async (req, res) => {
     status: 'OK',
     result: newUser,
   });
+});
+
+exports.changePassword = CatchAsync(async (req, res, next) => {
+  const userWithNewPassword = req.body;
+  if (userWithNewPassword.newPassword !== userWithNewPassword.confirmPassword) {
+    next(new Exception('New Password and Confirm Password not match!', 400));
+  }
+
+  const userDB = await User.findOne({ email: userWithNewPassword.email });
+
+  if (!userDB) {
+    next(new Exception('User not found', 400));
+  }
+
+  const validPassword = await Bcrypt.comparePassword(
+    userWithNewPassword.oldPassword,
+    userDB.password
+  );
+
+  if (validPassword) {
+    userDB.password = await Bcrypt.cryptPassword(
+      userWithNewPassword.newPassword
+    );
+
+    await User.findOneAndUpdate({ email: userWithNewPassword.email }, userDB);
+
+    res.status(200).json({
+      status: 'OK',
+      message: 'Password has been change',
+    });
+  } else {
+    next(new Exception('Invalid password', 400));
+  }
 });
