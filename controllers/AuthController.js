@@ -27,21 +27,14 @@ exports.doLogin = CatchAsync(async (req, res, next) => {
   }
 });
 
-exports.doRegister = async (req, res) => {
-  try {
-    let password = req.body.password;
-    const hash = await Bcrypt.cryptPassword(password);
-    req.body.password = hash;
-    const newUser = await User.create(req.body);
-    newUser.password = undefined;
-    res.status(200).json({
-      status: 'OK',
-      result: newUser,
-    });
-  } catch (err) {
-    res.status(400).json({
-      status: 'Bad Request',
-      message: err.message,
-    });
-  }
-};
+exports.doRegister = CatchAsync(async (req, res) => {
+  let password = req.body.password;
+  const hash = await Bcrypt.cryptPassword(password);
+  req.body.password = hash;
+  const newUser = await User.create(req.body);
+  newUser.password = undefined;
+  res.status(200).json({
+    status: 'OK',
+    result: newUser,
+  });
+});
