@@ -1,106 +1,58 @@
 const User = require('../models/UserModel');
 const APIFeature = require('./../utils/APIFeature');
-const Bcrypt = require('./../utils/Bcrypt');
+const CatchAsync = require('./../utils/CatchAsync');
+const Exception = require('./../utils/Exception');
+const RemovePassword = require('./../utils/RemovePassword');
 
-exports.alliasTopUser = async (req, res, next) => {
+exports.alliasTopUser = CatchAsync(async (req, res, next) => {
   req.query.limit = '5';
   req.query.sort = '-createAt';
   req.query.fields = 'username, email, password';
   next();
-};
+});
 
-exports.createUser = async (req, res) => {
-  try {
-    let password = req.body.password;
-    const hash = await Bcrypt.cryptPassword(password);
-    req.body.password = hash;
-    const newUser = await User.create(req.body);
+exports.updateUser = CatchAsync(async (req, res, next) => {
+  const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
 
-    res.status(200).json({
-      status: 'OK',
-      result: newUser,
-    });
-  } catch (err) {
-    res.status(400).json({
-      status: 'Bad Request',
-      message: err,
-    });
+  res.status(200).json({
+    status: 'OK',
+    result: RemovePassword(updatedUser),
+  });
+});
+
+exports.deleteUser = CatchAsync(async (req, res, next) => {
+  await User.findByIdAndDelete(req.params.id);
+  res.status(204).json({
+    status: 'OK',
+    message: null,
+  });
+});
+
+exports.getUser = CatchAsync(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    next(new Exception('User not found', 404));
   }
-};
 
-exports.updateUser = async (req, res) => {
-  try {
-    const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    res.status(200).json({
-      status: 'OK',
-      result: updatedUser,
-    });
-  } catch (err) {
-    res.status(400).json({
-      status: 'Bad Request',
-      message: err,
-    });
-  }
-};
+  res.status(200).json({
+    status: 'OK',
+    result: RemovePassword(user),
+  });
+});
 
-exports.deleteUser = async (req, res) => {
-  try {
-    await User.findByIdAndDelete(req.params.id);
-    res.status(204).json({
-      status: 'OK',
-      message: null,
-    });
-  } catch (err) {
-    res.status(400).json({
-      status: 'Bad Request',
-      message: err,
-    });
-  }
-};
+exports.getAllUsers = CatchAsync(async (req, res, next) => {
+  const feature = new APIFeature(User.find(), req.query)
+    .filter()
+    .sort()
+    .limit()
+    .pagination();
+  const users = await feature.query;
 
-exports.getUser = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-
-    if (user) {
-      res.status(200).json({
-        status: 'OK',
-        result: user,
-      });
-    } else {
-      res.status(404).json({
-        status: 'Not Found',
-        message: 'User not found',
-      });
-    }
-  } catch (err) {
-    res.status(400).json({
-      result: 'bad request',
-      message: err,
-    });
-  }
-};
-
-exports.getAllUsers = async (req, res) => {
-  try {
-    const feature = new APIFeature(User.find(), req.query)
-      .filter()
-      .sort()
-      .limit()
-      .pagination();
-    const users = await feature.query;
-
-    res.status(200).json({
-      status: 'OK',
-      result: users,
-    });
-  } catch (err) {
-    res.status(400).json({
-      status: 'Bad Request',
-      message: err,
-    });
-  }
-};
+  res.status(200).json({
+    status: 'OK',
+    result: users,
+  });
+});

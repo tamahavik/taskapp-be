@@ -7,10 +7,7 @@ router
   .route('/top-5-user')
   .get(userController.alliasTopUser, userController.getAllUsers);
 
-router
-  .route('/')
-  .get(userController.getAllUsers)
-  .post(userController.createUser);
+router.route('/').get(userController.getAllUsers);
 
 router
   .route('/:id')
