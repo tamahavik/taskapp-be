@@ -2,7 +2,7 @@ const express = require('express');
 const morgan = require('morgan');
 
 const Exception = require('./utils/Exception');
-const ErrorHandling = require('./utils/ErrorHandling');
+const GlobalErrorHandling = require('./utils/GlobalErrorHandling');
 const UserRouter = require('./routes/UserRoutes');
 const AuthRouter = require('./routes/AuthRoutes');
 const TaskRouter = require('./routes/TaskRoutes');
@@ -43,6 +43,6 @@ app.all('*', (req, res, next) => {
 /**
  * this is for error handling middleware
  */
-app.use(ErrorHandling);
+app.use(GlobalErrorHandling);
 
 module.exports = app;

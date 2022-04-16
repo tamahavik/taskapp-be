@@ -1,3 +1,4 @@
+const Exception = require('../utils/Exception');
 const User = require('./../models/UserModel');
 const Bcrypt = require('./../utils/Bcrypt');
 const CatchAsync = require('./../utils/CatchAsync');
@@ -8,12 +9,9 @@ exports.doLogin = CatchAsync(async (req, res, next) => {
   );
 
   if (!userDatabase) {
-    res.status(404).json({
-      status: 'Not Found',
-      message: 'User not found',
-    });
+    next(new Exception('Invalid Credentials', 404));
   }
-  const validPassword = Bcrypt.comparePassword(
+  const validPassword = await Bcrypt.comparePassword(
     req.body.password,
     userDatabase.password
   );
@@ -25,10 +23,7 @@ exports.doLogin = CatchAsync(async (req, res, next) => {
       data: userDatabase,
     });
   } else {
-    res.status(404).json({
-      status: 'Not Found',
-      message: 'Invalid Credentials',
-    });
+    next(new Exception('Invalid Credentials', 404));
   }
 });
 

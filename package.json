@@ -4,7 +4,8 @@
   "description": "this is code backend for task app",
   "main": "app.js",
   "scripts": {
-    "start": "nodemon server.js"
+    "start": "nodemon server.js",
+    "debug": "ndb server.js"
   },
   "author": "Havik Priyatama",
   "license": "MIT",
@@ -21,6 +22,7 @@
     "node": ">=10.0.0"
   },
   "devDependencies": {
+    "ndb": "^1.1.5",
     "nodemon": "^2.0.15"
   }
 }
