@@ -5,7 +5,9 @@
   "main": "app.js",
   "scripts": {
     "start": "nodemon server.js",
-    "debug": "ndb server.js"
+    "start:prod": "NODE_ENV=production nodemon server.js",
+    "debug": "ndb server.js",
+    "debug:prod": "NODE_ENV=production ndb server.js"
   },
   "author": "Havik Priyatama",
   "license": "MIT",
@@ -16,7 +18,8 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.2.10",
     "morgan": "^1.10.0",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "validator": "^13.7.0"
   },
   "engines": {
     "node": ">=10.0.0"

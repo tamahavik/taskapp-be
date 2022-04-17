@@ -12,10 +12,16 @@ const handleDuplicateError = (err) => {
 };
 
 const handleValidationError = (err) => {
-  const errors = Object.value(err.errors).map((err) => err.message);
+  const errors = Object.values(err.errors).map((err) => err.message);
   const message = `Invalid input data ${errors.join(', ')}`;
   return new Exception(message, 400);
 };
+
+const handleJsonWebTokenError = (error) =>
+  new Exception('Invalid token, please login again!', 401);
+
+const handleTokenExpiredError = (err) =>
+  new Exception('Token expired, please login again!', 401);
 
 const devError = (err, res) => {
   res.status(err.statusCode).json({
@@ -48,10 +54,16 @@ module.exports = (err, req, res, next) => {
   if (process.env.NODE_ENV !== 'production') {
     devError(err, res);
   } else {
-    let error = { ...err };
+    let error = Object.assign(err);
     if (error.name === 'CastError') error = handleCastError(error);
     if (error.code === 11000) error = handleDuplicateError(error);
     if (error.name === 'ValidationError') error = handleValidationError(error);
+    if (error._message && error._message.includes('validation failed'))
+      error = handleValidationError(error);
+    if (error.name === 'JsonWebTokenError')
+      error = handleJsonWebTokenError(error);
+    if (error.name === 'TokenExpiredError')
+      error = handleTokenExpiredError(error);
     prodError(error, res);
   }
 };

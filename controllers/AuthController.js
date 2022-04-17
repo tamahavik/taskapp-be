@@ -1,41 +1,47 @@
+const { promisify } = require('util');
+const jwt = require('jsonwebtoken');
 const Exception = require('../utils/Exception');
 const User = require('./../models/UserModel');
-const Bcrypt = require('./../utils/Bcrypt');
 const CatchAsync = require('./../utils/CatchAsync');
 
-exports.doLogin = CatchAsync(async (req, res, next) => {
-  const userDatabase = await User.findOne({ email: req.body.email }).select(
-    '-__v'
-  );
-
-  if (!userDatabase) {
-    next(new Exception('Invalid Credentials', 404));
-  }
-  const validPassword = await Bcrypt.comparePassword(
-    req.body.password,
-    userDatabase.password
-  );
-
-  if (validPassword) {
-    userDatabase.password = undefined;
-    res.status(200).json({
-      status: 'OK',
-      data: userDatabase,
-    });
-  } else {
-    next(new Exception('Invalid Credentials', 404));
-  }
-});
+const signToken = (id) => {
+  return jwt.sign({ id: id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRATION,
+  });
+};
 
 exports.doRegister = CatchAsync(async (req, res, next) => {
-  let password = req.body.password;
-  const hash = await Bcrypt.cryptPassword(password);
-  req.body.password = hash;
-  const newUser = await User.create(req.body);
-  newUser.password = undefined;
+  const newUser = await User.create({
+    name: req.body.name,
+    email: req.body.email,
+    password: req.body.password,
+    passwordConfirm: req.body.passwordConfirm,
+  });
+
+  const token = signToken(newUser._id);
+
+  res.status(201).json({
+    status: 'OK',
+    token: token,
+    data: newUser,
+  });
+});
+
+exports.doLogin = CatchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return next(new Exception('email and password must be provided!', 400));
+  }
+
+  const user = await User.findOne({ email }).select('+password');
+  if (!user || !(await user.isValidPassword(password, user.password))) {
+    return next(new Exception('invalid credentials', 400));
+  }
+
+  const token = signToken(user._id);
   res.status(200).json({
     status: 'OK',
-    result: newUser,
+    token: token,
   });
 });
 
@@ -70,4 +76,46 @@ exports.changePassword = CatchAsync(async (req, res, next) => {
   } else {
     next(new Exception('Invalid password', 400));
   }
+});
+
+exports.protect = CatchAsync(async (req, res, next) => {
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if (!token) {
+    return next(
+      new Exception(
+        'you not authorized to access this page, please login again!',
+        401
+      )
+    );
+  }
+
+  const decode = promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+  const currentUser = await currentUser.findById(decode.id);
+  if (!currentUser) {
+    return next(
+      new Exception(
+        'you not authorized to access this page, please login again!',
+        401
+      )
+    );
+  }
+
+  if (currentUser.changePasswordAfter(decode.iat)) {
+    return next(
+      new Exception(
+        'you not authorized to access this page, please login again!',
+        401
+      )
+    );
+  }
+  req.user = currentUser;
+  next();
 });
